@@ -64,15 +64,13 @@ def load_embedding_index(path: str = "src/storage"):
                                         api_base=os.getenv("OPENAI_API_BASE")))
     
     print("\n" + "="*60)
-    print("📦 Index successfully unpacked from knowledge_base/test! Handle with wisdom.")
+    print("📦 Index successfully unpacked from knowledge_base")
     print("="*60)
 
     return index
 # ✅ 彻底关闭全局默认 LLM
 
 def read_and_query(user_query: str = "what do we have?"):
-    token_counter = TokenCountingHandler()
-    callback_manager = CallbackManager([token_counter])
     
     load_key()
     index = load_embedding_index()
@@ -82,8 +80,7 @@ def read_and_query(user_query: str = "what do we have?"):
             model="gpt-5-nano",
             api_base=os.getenv("OPENAI_API_BASE"), 
             api_key = os.getenv("OPENAI_API_KEY"),
-            is_chat_model=True,
-            callback_manager=callback_manager
+            is_chat_model=True
             
             ))
     
@@ -92,15 +89,9 @@ def read_and_query(user_query: str = "what do we have?"):
     print("="*60)
 
     response = query_engine.query(user_query)
-    counts = token_counter.get_aggregated_token_counts()
-    
-    
-    print("\n" + "="*60)
-    print(f"I crunched the data, bribed the algorithm, and the answer is: 💸🤖\nTotal tokens: {counts['total_tokens']}")
-    print("="*60)
     return response
 
-print(read_and_query())
+
 
 
 
