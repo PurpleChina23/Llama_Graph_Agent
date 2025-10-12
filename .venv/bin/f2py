@@ -1,5 +1,5 @@
 #!/bin/sh
-'''exec' "/Users/blackchina23/Fuck School/Western MDA/CS9146 Artifical Intelligence/Agent/.venv/bin/python3" "$0" "$@"
+'''exec' "/Users/blackchina23/Fuck School/Western MDA/CS9146 Artifical Intelligence/Agent/Agent/.venv/bin/python3.10" "$0" "$@"
 ' '''
 import sys
 from numpy.f2py.f2py2e import main

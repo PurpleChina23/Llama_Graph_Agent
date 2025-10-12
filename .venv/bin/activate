@@ -38,7 +38,7 @@ deactivate () {
 # unset irrelevant variables
 deactivate nondestructive
 
-VIRTUAL_ENV="/Users/blackchina23/Fuck School/Western MDA/CS9146 Artifical Intelligence/Agent/.venv"
+VIRTUAL_ENV="/Users/blackchina23/Fuck School/Western MDA/CS9146 Artifical Intelligence/Agent/Agent/.venv"
 export VIRTUAL_ENV
 
 _OLD_VIRTUAL_PATH="$PATH"
