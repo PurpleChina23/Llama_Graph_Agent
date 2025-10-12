@@ -36,7 +36,7 @@ else:
 # ============================================================================
 
 llm = ChatOpenAI(
-    model='gpt-4',
+    model='gpt-5-mini',
     temperature=0,
 )
 print("✅ Model initialized")

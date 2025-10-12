@@ -13,6 +13,9 @@ from llama_index.embeddings.openai import OpenAIEmbedding
 from llama_index.core import SimpleDirectoryReader,VectorStoreIndex
 from llama_index.llms.openai_like import OpenAILike
 from llama_index.core import StorageContext,load_index_from_storage
+from llama_index.core.callbacks import CallbackManager, TokenCountingHandler
+
+
 
 
 
@@ -52,8 +55,54 @@ def create_and_save_embedding_index(path: str = "src/raw_data",
 
 def load_embedding_index(path: str = "src/storage"):
     # Load index from storage without recomputing embeddings
+    #？？？？？？？？？要不要用embedding model api 拿参数？？？？？？？？？？？？
     storage_context = StorageContext.from_defaults(persist_dir=path)
-    index = load_index_from_storage(storage_context)  # DO NOT pass embed_model
-    print("成功从knowledge_base/test路径加载索引")
+    index = load_index_from_storage(storage_context,
+                                    embed_model=OpenAIEmbedding(
+                                        model = "text-embedding-3-small",
+                                        api_key=os.getenv("EMBEDDING_KEY"),
+                                        api_base=os.getenv("OPENAI_API_BASE")))
+    
+    print("\n" + "="*60)
+    print("📦 Index successfully unpacked from knowledge_base/test! Handle with wisdom.")
+    print("="*60)
+
     return index
+# ✅ 彻底关闭全局默认 LLM
+
+def read_and_query(user_query: str = "what do we have?"):
+    token_counter = TokenCountingHandler()
+    callback_manager = CallbackManager([token_counter])
+    
+    load_key()
+    index = load_embedding_index()
+    query_engine = index.as_query_engine(
+        streaming=False,
+        llm=OpenAILike(
+            model="gpt-5-nano",
+            api_base=os.getenv("OPENAI_API_BASE"), 
+            api_key = os.getenv("OPENAI_API_KEY"),
+            is_chat_model=True,
+            callback_manager=callback_manager
+            
+            ))
+    
+    print("\n" + "="*60)
+    print("Dont BB I am Thinking ...")
+    print("="*60)
+
+    response = query_engine.query(user_query)
+    counts = token_counter.get_aggregated_token_counts()
+    
+    
+    print("\n" + "="*60)
+    print(f"I crunched the data, bribed the algorithm, and the answer is: 💸🤖\nTotal tokens: {counts['total_tokens']}")
+    print("="*60)
+    return response
+
+print(read_and_query())
+
+
+
+
 
