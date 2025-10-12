@@ -37,6 +37,7 @@ attr/validators.pyi,sha256=ftmW3m4KJ3pQcIXAj-BejT7BY4ZfqrC1G-5W7XvoPds,4082
 attrs-25.4.0.dist-info/INSTALLER,sha256=zuuue4knoyJ-UwPPXg8fezS7VCrXJQrAP7zeNuwvFQg,4
 attrs-25.4.0.dist-info/METADATA,sha256=2Rerxj7agcMRxiwdkt6lC2guqHAmkGKCH13nWWK7ZoQ,10473
 attrs-25.4.0.dist-info/RECORD,,
+attrs-25.4.0.dist-info/REQUESTED,sha256=47DEQpj8HBSa-_TImW-5JCeuQeRkm5NMpJWZG3hSuFU,0
 attrs-25.4.0.dist-info/WHEEL,sha256=qtCwoSJWgHk21S1Kb4ihdzI2rlJ1ZKaIurTj_ngOhyQ,87
 attrs-25.4.0.dist-info/licenses/LICENSE,sha256=iCEVyV38KvHutnFPjsbVy8q_Znyv-HKfQkINpj9xTp8,1109
 attrs/__init__.py,sha256=RxaAZNwYiEh-fcvHLZNpQ_DWKni73M_jxEPEftiq1Zc,1183

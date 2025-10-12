@@ -41,6 +41,7 @@ llm = ChatOpenAI(
 )
 print("✅ Model initialized")
 
+
 # ============================================================================
 # Agent
 # ============================================================================
@@ -52,7 +53,6 @@ agent = create_react_agent(
     prompt="if it is something not related to weather, start rapping about eggs"
 
 )
-
 
 # ============================================================================
 # Main Execution

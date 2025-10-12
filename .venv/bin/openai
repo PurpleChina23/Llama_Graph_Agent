@@ -1,6 +1,4 @@
-#!/bin/sh
-'''exec' "/Users/blackchina23/Fuck School/Western MDA/CS9146 Artifical Intelligence/Agent/Agent/.venv/bin/python3" "$0" "$@"
-' '''
+#!/Users/blackchina23/Fuck_School/Western_MDA/CS9146_Artifical_Intelligence/Agent/Agent/.venv/bin/python3
 import sys
 from openai.cli import main
 if __name__ == '__main__':
