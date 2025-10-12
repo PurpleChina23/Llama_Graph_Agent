@@ -1,6 +1,6 @@
 """VectorStore agent."""
 
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 from langchain_core._api import deprecated
 from langchain_core.callbacks.base import BaseCallbackManager
@@ -20,6 +20,10 @@ from langchain.chains.llm import LLMChain
     since="0.2.13",
     removal="1.0",
     message=(
+        "This function will continue to be supported, but it is recommended for new "
+        "use cases to be built with LangGraph. LangGraph offers a more flexible and "
+        "full-featured framework for building agents, including support for "
+        "tool-calling, persistence of state, and human-in-the-loop workflows. "
         "See API reference for this function for a replacement implementation: "
         "https://api.python.langchain.com/en/latest/agents/langchain.agents.agent_toolkits.vectorstore.base.create_vectorstore_agent.html "  # noqa: E501
         "Read more here on how to create agents that query vector stores: "
@@ -31,8 +35,8 @@ def create_vectorstore_agent(
     toolkit: VectorStoreToolkit,
     callback_manager: Optional[BaseCallbackManager] = None,
     prefix: str = PREFIX,
-    verbose: bool = False,
-    agent_executor_kwargs: Optional[Dict[str, Any]] = None,
+    verbose: bool = False,  # noqa: FBT001,FBT002
+    agent_executor_kwargs: Optional[dict[str, Any]] = None,
     **kwargs: Any,
 ) -> AgentExecutor:
     """Construct a VectorStore agent from an LLM and tools.
@@ -109,6 +113,10 @@ def create_vectorstore_agent(
     since="0.2.13",
     removal="1.0",
     message=(
+        "This function will continue to be supported, but it is recommended for new "
+        "use cases to be built with LangGraph. LangGraph offers a more flexible and "
+        "full-featured framework for building agents, including support for "
+        "tool-calling, persistence of state, and human-in-the-loop workflows. "
         "See API reference for this function for a replacement implementation: "
         "https://api.python.langchain.com/en/latest/agents/langchain.agents.agent_toolkits.vectorstore.base.create_vectorstore_router_agent.html "  # noqa: E501
         "Read more here on how to create agents that query vector stores: "
@@ -120,8 +128,8 @@ def create_vectorstore_router_agent(
     toolkit: VectorStoreRouterToolkit,
     callback_manager: Optional[BaseCallbackManager] = None,
     prefix: str = ROUTER_PREFIX,
-    verbose: bool = False,
-    agent_executor_kwargs: Optional[Dict[str, Any]] = None,
+    verbose: bool = False,  # noqa: FBT001,FBT002
+    agent_executor_kwargs: Optional[dict[str, Any]] = None,
     **kwargs: Any,
 ) -> AgentExecutor:
     """Construct a VectorStore router agent from an LLM and tools.

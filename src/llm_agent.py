@@ -38,8 +38,6 @@ else:
 llm = ChatOpenAI(
     model='gpt-4',
     temperature=0,
-    openai_api_key=api_key,
-    openai_api_base=OPENAI_API_BASE
 )
 print("✅ Model initialized")
 

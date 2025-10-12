@@ -7,13 +7,15 @@ from ..generic._data_structures import DictionaryObject
 
 class AnnotationDictionary(DictionaryObject, ABC):
     def __init__(self) -> None:
-        from ..generic._base import NameObject
+        super().__init__()
 
-        # "rect" should not be added here as PolyLine can automatically set it
+        from ..generic._base import NameObject  # noqa: PLC0415
+
+        # /Rect should not be added here as Polygon and PolyLine can automatically set it
         self[NameObject("/Type")] = NameObject("/Annot")
-        # The flags were NOT added to the constructor on purpose: We expect that
-        # most users don't want to change the default. If they do, they
-        # can use the property. The default is 0.
+        # The flags were NOT added to the constructor on purpose:
+        # We expect that most users don't want to change the default.
+        # If they do, they can use the property. The default is 0.
 
     @property
     def flags(self) -> AnnotationFlag:

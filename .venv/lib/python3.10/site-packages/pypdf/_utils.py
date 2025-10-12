@@ -38,14 +38,11 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from io import DEFAULT_BUFFER_SIZE
 from os import SEEK_CUR
+from re import Pattern
 from typing import (
     IO,
     Any,
-    Dict,
-    List,
     Optional,
-    Pattern,
-    Tuple,
     Union,
     overload,
 )
@@ -56,16 +53,21 @@ if sys.version_info[:2] >= (3, 10):
 else:
     from typing_extensions import TypeAlias
 
+if sys.version_info >= (3, 11):
+    from typing import Self
+else:
+    from typing_extensions import Self
+
 from .errors import (
     STREAM_TRUNCATED_PREMATURELY,
     DeprecationError,
     PdfStreamError,
 )
 
-TransformationMatrixType: TypeAlias = Tuple[
-    Tuple[float, float, float], Tuple[float, float, float], Tuple[float, float, float]
+TransformationMatrixType: TypeAlias = tuple[
+    tuple[float, float, float], tuple[float, float, float], tuple[float, float, float]
 ]
-CompressedTransformationMatrix: TypeAlias = Tuple[
+CompressedTransformationMatrix: TypeAlias = tuple[
     float, float, float, float, float, float
 ]
 
@@ -75,7 +77,7 @@ StrByteType = Union[str, StreamType]
 
 def parse_iso8824_date(text: Optional[str]) -> Optional[datetime]:
     orgtext = text
-    if text is None:
+    if not text:
         return None
     if text[0].isdigit():
         text = "D:" + text
@@ -105,6 +107,31 @@ def parse_iso8824_date(text: Optional[str]) -> Optional[datetime]:
     raise ValueError(f"Can not convert date: {orgtext}")
 
 
+def format_iso8824_date(dt: datetime) -> str:
+    """
+    Convert a datetime object to PDF date string format.
+
+    Converts datetime to the PDF date format D:YYYYMMDDHHmmSSOHH'mm
+    as specified in the PDF Reference.
+
+    Args:
+        dt: A datetime object to convert.
+
+    Returns:
+        A date string in PDF format.
+    """
+    date_str = dt.strftime("D:%Y%m%d%H%M%S")
+    if dt.tzinfo is not None:
+        offset = dt.utcoffset()
+        assert offset is not None
+        total_seconds = int(offset.total_seconds())
+        hours, remainder = divmod(abs(total_seconds), 3600)
+        minutes = remainder // 60
+        sign = "+" if total_seconds >= 0 else "-"
+        date_str += f"{sign}{hours:02d}'{minutes:02d}'"
+    return date_str
+
+
 def _get_max_pdf_version_header(header1: str, header2: str) -> str:
     versions = (
         "%PDF-1.3",
@@ -122,6 +149,11 @@ def _get_max_pdf_version_header(header1: str, header2: str) -> str:
     if len(pdf_header_indices) == 0:
         raise ValueError(f"Neither {header1!r} nor {header2!r} are proper headers")
     return versions[max(pdf_header_indices)]
+
+
+WHITESPACES = (b"\x00", b"\t", b"\n", b"\f", b"\r", b" ")
+WHITESPACES_AS_BYTES = b"".join(WHITESPACES)
+WHITESPACES_AS_REGEXP = b"[" + WHITESPACES_AS_BYTES + b"]"
 
 
 def read_until_whitespace(stream: StreamType, maxchars: Optional[int] = None) -> bytes:
@@ -168,22 +200,22 @@ def read_non_whitespace(stream: StreamType) -> bytes:
 
 def skip_over_whitespace(stream: StreamType) -> bool:
     """
-    Similar to read_non_whitespace, but return a boolean if more than one
+    Similar to read_non_whitespace, but return a boolean if at least one
     whitespace character was read.
 
     Args:
         stream: The data stream from which was read.
 
     Returns:
-        True if more than one whitespace was skipped, otherwise return False.
+        True if one or more whitespace was skipped, otherwise return False.
 
     """
-    tok = WHITESPACES[0]
+    tok = stream.read(1)
     cnt = 0
     while tok in WHITESPACES:
-        tok = stream.read(1)
         cnt += 1
-    return cnt > 1
+        tok = stream.read(1)
+    return cnt > 0
 
 
 def check_if_whitespace_only(value: bytes) -> bool:
@@ -197,11 +229,7 @@ def check_if_whitespace_only(value: bytes) -> bool:
         True if the value only has whitespace characters, otherwise return False.
 
     """
-    for index in range(len(value)):
-        current = value[index : index + 1]
-        if current not in WHITESPACES:
-            return False
-    return True
+    return all(b in WHITESPACES_AS_BYTES for b in value)
 
 
 def skip_over_comment(stream: StreamType) -> None:
@@ -365,11 +393,6 @@ def ord_(b: Union[int, str, bytes]) -> Union[int, bytes]:
     return b
 
 
-WHITESPACES = (b" ", b"\n", b"\r", b"\t", b"\x00")
-WHITESPACES_AS_BYTES = b"".join(WHITESPACES)
-WHITESPACES_AS_REGEXP = b"[" + WHITESPACES_AS_BYTES + b"]"
-
-
 def deprecate(msg: str, stacklevel: int = 3) -> None:
     warnings.warn(msg, DeprecationWarning, stacklevel=stacklevel)
 
@@ -379,7 +402,7 @@ def deprecation(msg: str) -> None:
 
 
 def deprecate_with_replacement(old_name: str, new_name: str, removed_in: str) -> None:
-    """Raise an exception that a feature will be removed, but has a replacement."""
+    """Issue a warning that a feature will be removed, but has a replacement."""
     deprecate(
         f"{old_name} is deprecated and will be removed in pypdf {removed_in}. Use {new_name} instead.",
         4,
@@ -394,7 +417,7 @@ def deprecation_with_replacement(old_name: str, new_name: str, removed_in: str) 
 
 
 def deprecate_no_replacement(name: str, removed_in: str) -> None:
-    """Raise an exception that a feature will be removed without replacement."""
+    """Issue a warning that a feature will be removed without replacement."""
     deprecate(f"{name} is deprecated and will be removed in pypdf {removed_in}.", 4)
 
 
@@ -435,7 +458,7 @@ def logger_warning(msg: str, src: str) -> None:
 
 
 def rename_kwargs(
-    func_name: str, kwargs: Dict[str, Any], aliases: Dict[str, str], fail: bool = False
+    func_name: str, kwargs: dict[str, Any], aliases: dict[str, str], fail: bool = False
 ) -> None:
     """
     Helper function to deprecate arguments.
@@ -465,22 +488,23 @@ def rename_kwargs(
                     f"{old_term} is deprecated as an argument. Use {new_term} instead"
                 ),
                 category=DeprecationWarning,
+                stacklevel=3,
             )
 
 
 def _human_readable_bytes(bytes: int) -> str:
     if bytes < 10**3:
         return f"{bytes} Byte"
-    elif bytes < 10**6:
+    if bytes < 10**6:
         return f"{bytes / 10**3:.1f} kB"
-    elif bytes < 10**9:
+    if bytes < 10**9:
         return f"{bytes / 10**6:.1f} MB"
-    else:
-        return f"{bytes / 10**9:.1f} GB"
+    return f"{bytes / 10**9:.1f} GB"
 
 
 # The following class has been copied from Django:
 # https://github.com/django/django/blob/adae619426b6f50046b3daaa744db52989c9d6db/django/utils/functional.py#L51-L65
+# It received some modifications to comply with our own coding standards.
 #
 # Original license:
 #
@@ -519,20 +543,20 @@ class classproperty:  # noqa: N801
     that can be accessed directly from the class.
     """
 
-    def __init__(self, method=None):  # type: ignore  # noqa: ANN001
+    def __init__(self, method=None) -> None:  # type: ignore  # noqa: ANN001
         self.fget = method
 
     def __get__(self, instance, cls=None) -> Any:  # type: ignore  # noqa: ANN001
         return self.fget(cls)
 
-    def getter(self, method):  # type: ignore  # noqa: ANN001, ANN202
+    def getter(self, method) -> Self:  # type: ignore  # noqa: ANN001
         self.fget = method
         return self
 
 
 @dataclass
 class File:
-    from .generic import IndirectObject
+    from .generic import IndirectObject  # noqa: PLC0415
 
     name: str = ""
     """
@@ -562,7 +586,7 @@ class Version:
         self.version_str = version_str
         self.components = self._parse_version(version_str)
 
-    def _parse_version(self, version_str: str) -> List[Tuple[int, str]]:
+    def _parse_version(self, version_str: str) -> list[tuple[int, str]]:
         components = version_str.split(".")
         parsed_components = []
         for component in components:
@@ -582,22 +606,26 @@ class Version:
             return False
         return self.components == other.components
 
+    def __hash__(self) -> int:
+        # Convert to tuple as lists cannot be hashed.
+        return hash((self.__class__, tuple(self.components)))
+
     def __lt__(self, other: Any) -> bool:
         if not isinstance(other, Version):
             raise ValueError(f"Version cannot be compared against {type(other)}")
-        min_len = min(len(self.components), len(other.components))
-        for i in range(min_len):
-            self_value, self_suffix = self.components[i]
-            other_value, other_suffix = other.components[i]
+
+        for self_component, other_component in zip(self.components, other.components):
+            self_value, self_suffix = self_component
+            other_value, other_suffix = other_component
 
             if self_value < other_value:
                 return True
-            elif self_value > other_value:
+            if self_value > other_value:
                 return False
 
             if self_suffix < other_suffix:
                 return True
-            elif self_suffix > other_suffix:
+            if self_suffix > other_suffix:
                 return False
 
         return len(self.components) < len(other.components)
