@@ -19,8 +19,8 @@ from llama_index.core.callbacks import CallbackManager, TokenCountingHandler
 
 
 
-def create_and_save_embedding_index(path: str = "src/raw_data", 
-                                    emb_model: str = "text-embedding-v3"):
+def create_and_save_embedding_index(load_path: str = "src/raw_data", 
+                                    store_path: str = "src/storage"):
     load_key()
     print(f'''你配置的 API Key 是：{os.environ["EMBEDDING_KEY"][:5]+"*"*5}''')
 
@@ -30,7 +30,7 @@ def create_and_save_embedding_index(path: str = "src/raw_data",
 
 
     # Load documents from the 'raw_data' directory
-    documents = SimpleDirectoryReader(path).load_data()
+    documents = SimpleDirectoryReader(load_path).load_data()
 
     print("\n" + "="*60)
     print("Creating vector index...")
@@ -40,15 +40,15 @@ def create_and_save_embedding_index(path: str = "src/raw_data",
         documents,
 
         embed_model=OpenAIEmbedding(
-            model = emb_model,
+            model = "text-embedding-3-large",
             api_key=os.getenv("EMBEDDING_KEY"),
             api_base=os.getenv("OPENAI_API_BASE")  
         ))
 
 
-    os.makedirs("src/storage", exist_ok=True)
+    os.makedirs(store_path, exist_ok=True)
     # Persist
-    index.storage_context.persist("src/storage")
+    index.storage_context.persist(store_path)
 
     print("索引文件保存到了knowledge_base/test")
 
@@ -92,7 +92,8 @@ def read_and_query(user_query: str = "what do we have?"):
     return response
 
 
-
+create_and_save_embedding_index(load_path = "src/raw_data/fitting_book",
+                                store_path = "src/storage/fitting_book_emb")
 
 
 

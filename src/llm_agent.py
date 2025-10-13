@@ -10,6 +10,7 @@ from langchain_openai import ChatOpenAI
 from typing import Optional
 from langgraph.prebuilt import create_react_agent
 from tools import query_knowledge_base
+from pydantic import SecretStr
 
 # ============================================================================
 # Load environment variables
@@ -36,8 +37,10 @@ else:
 # ============================================================================
 
 llm = ChatOpenAI(
-    model='gpt-5-mini',
+    model='gpt-5-nano',
     temperature=0,
+    base_url=OPENAI_API_BASE,
+    api_key=SecretStr(api_key) if api_key else None,
 )
 print("✅ Model initialized")
 
@@ -50,10 +53,13 @@ print("✅ Model initialized")
 with open("src/Prompt/golf_advisor_prompt.md", "r", encoding="utf-8") as f:
     system_message = f.read()
 
+# Create agent with prompt parameter
+# Note: checkpointer=False disables state persistence to avoid message ordering issues
 agent = create_react_agent(
     model=llm,
     tools=[query_knowledge_base],
-    prompt=system_message
+    prompt=system_message,
+    checkpointer=False  # Disable checkpointing to prevent state corruption
 )
 
 # ============================================================================
@@ -65,12 +71,17 @@ if __name__ == "__main__":
     print("Sending query to agent...")
     print("="*60)
 
-    response = agent.invoke({"messages": [("user",
-            "- Driver Swing Speed: Average 121.5 mph, Peak 124.4 mph (source: tglgolf.com)\n"
-            "- Ball Speed: Up to 180 mph, notable 186 mph in 2007\n"
-            "- Height: 6 feet 1 inch (185 cm)\n"
-            "- Weight: 185 pounds (84 kg)\n"
-            "- Age: 49 years oldwhat should my driver be like")]})
+    # Create fresh message with proper format
+    user_message = (
+        "- Driver Swing Speed: Average 121.5 mph, Peak 124.4 mph\n"
+        "- Ball Speed: Up to 180 mph, notable 186 mph\n"
+        "- Height: 6 feet 1 inch (185 cm)\n"
+        "- Weight: 185 pounds (84 kg)\n"
+        "- Age: 49 years old\n"
+        "- What should my driver be like?"
+    )
+
+    response = agent.invoke({"messages": [("user", user_message)]})
 
     print("\n" + "="*60)
     print("Agent Response:")
