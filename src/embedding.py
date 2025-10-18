@@ -28,6 +28,7 @@ from llama_index.core.graph_stores.simple import SimpleGraphStore
 from llama_index.llms.openai_like import OpenAILike
 from llama_index.core import StorageContext,load_index_from_storage
 from llama_index.core.response.notebook_utils import display_source_node
+from llama_index.core.node_parser import SemanticSplitterNodeParser
 
 
 
@@ -86,16 +87,22 @@ def create_and_save_embedding_index(load_path: str = "src/raw_data",
     # GOOD: Already using text-embedding-3-large (best model, 80.5% accuracy)
     # ============================================================================
     # IMPROVEMENT NEEDED: Add dimension parameter to save storage
-    # TODO: Add dimensions=1536 to reduce from native 3072 without much accuracy loss
+    # ✅ TODO: Add dimensions=1536 to reduce from native 3072 without much accuracy loss
     # ============================================================================
-
-    index = VectorStoreIndex.from_documents(
-        documents,
-        embed_model=OpenAIEmbedding(
+    splitter = SemanticSplitterNodeParser(
+          buffer_size=1,
+          breakpoint_percentile_threshold=95,
+          embed_model=OpenAIEmbedding(
             model = "text-embedding-3-large",  # ✅ GOOD: Best model
             api_key=os.getenv("EMBEDDING_KEY"),
             api_base=os.getenv("OPENAI_API_BASE")
-        ))
+            dimensions=1536 
+            )
+        )
+    
+    nodes = splitter.get_nodes_from_documents(documents)
+    index = VectorStoreIndex(nodes)
+    
 
 
     os.makedirs(store_path, exist_ok=True)
@@ -149,7 +156,7 @@ def load_embedding_index(path: str = "src/storage/"):
     storage_context = StorageContext.from_defaults(persist_dir=path)
     index = load_index_from_storage(storage_context,
                                     embed_model=OpenAIEmbedding(
-                                        model = "text-embedding-3-small",  # 🔴 CRITICAL: Change to "text-embedding-3-large"
+                                        model = "text-embedding-3-large",  # 🔴 CRITICAL: Change to "text-embedding-3-large"
                                         api_key=os.getenv("EMBEDDING_KEY"),
                                         api_base=os.getenv("OPENAI_API_BASE")))
 

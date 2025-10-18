@@ -9,7 +9,7 @@ from dotenv import load_dotenv, find_dotenv
 from langchain_openai import ChatOpenAI
 from typing import Optional
 from langgraph.prebuilt import create_react_agent
-from tools import query_knowledge_base
+from tools import query_knowledge_base, retrieved_knowledge_base
 from pydantic import SecretStr
 
 # ============================================================================
@@ -144,7 +144,7 @@ with open("src/Prompt/golf_advisor_prompt.md", "r", encoding="utf-8") as f:
 # Note: checkpointer=False disables state persistence to avoid message ordering issues
 agent = create_react_agent(
     model=llm,
-    tools=[query_knowledge_base],  # TODO: Add retrieve_knowledge_base tool when fixed
+    tools=[retrieved_knowledge_base],  # TODO: Add retrieve_knowledge_base tool when fixed
     prompt=system_message,
     checkpointer=False  # 🔴 CRITICAL: Change to MemorySaver() for conversation memory
     # TODO: Add state_modifier for better control (2025 feature)
