@@ -112,7 +112,7 @@ Together = Intelligent + Accurate
 
 ```bash
 # Clone the repository
-git clone <your-repo>
+git clone https://github.com/PurpleChina23/Llama_Graph_Agent.git
 cd Agent
 
 # Install dependencies
